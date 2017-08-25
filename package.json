@@ -14,5 +14,9 @@
     "fromage"
   ],
   "author": "Remify",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "snoowrap": "^1.14.2",
+    "underscore": "^1.8.3"
+  }
 }

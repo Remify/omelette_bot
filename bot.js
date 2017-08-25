@@ -1,31 +1,32 @@
+'use strict';
 let config = require('./config.json');
-let rawjs = require('raw.js');
-let _ = require('underscore');
+const _ = require('underscore');
+const snoowrap = require('snoowrap');
 
-
-let reddit = new rawjs(config.user_agent);
-reddit.setupOAuth2(config.client_id, config.client_secret, "http://localhost:8080");
-
-reddit.auth({ "username": config.username, "password": config.password }, function(err, response) {
-    if (err) {
-        console.log("Unable to authenticate user: " + err);
-    } else {
-        console.log('logged');
-        var CommentStream = rawjs.CommentStream;
-        var stream = new CommentStream({ "subreddit": "france", "run": false });
-
-        stream.on('comment', function(comment) {
-
-            if (comment.body.toLowerCase().indexOf('Omelette de fromage') >= 0) {
-                console.log('HON HON HON');
-            }
-            console.log("New comment in subreddit " + comment.subreddit, comment);
-        });
-
-        stream.on('error', function(e) {
-            console.log("Error: " + e);
-        });
-
-        stream.start();
-    }
+const reddit = new snoowrap({
+  userAgent: config.userAgent,
+  clientId: config.clientId,
+  clientSecret: config.clientSecret,
+  username: config.username,
+  password: config.password
 });
+
+reddit.getSubreddit('OmeletteBot').getNewComments().then(comments => {
+    comments.forEach(c => {
+        let body = c.body.toLowerCase();
+        if(body.indexOf('omelette du fromage') >= 0) {
+            
+            reddit.getSubmission('t3_6w1jl7').expandReplies().then(replies => {
+
+                // replies.comments.forEach(r => {
+                //     Object.values(r).indexOf('Omelette_bot');
+                //     console.log('has Omelette_bot, r');
+
+                // })
+                console.log(_.pick(replies, 'id'));
+            })
+            //c.reply('**Do you mean "Omelette au fromage" ?** \n \n Although meant to depict "cheese omelette", "Omelette du fromage" is grammatically incorrect. You should say "omelette au fromage", which means "an omelette with cheese". \n \n [Read more](http://www.urbandictionary.com/define.php?term=Omelette%20du%20fromage)');
+        }
+
+    });
+})
