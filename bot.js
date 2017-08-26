@@ -4,29 +4,43 @@ const _ = require('underscore');
 const snoowrap = require('snoowrap');
 
 const reddit = new snoowrap({
-  userAgent: config.userAgent,
-  clientId: config.clientId,
-  clientSecret: config.clientSecret,
-  username: config.username,
-  password: config.password
+    userAgent: config.userAgent,
+    clientId: config.clientId,
+    clientSecret: config.clientSecret,
+    username: config.username,
+    password: config.password
 });
 
-reddit.getSubreddit('OmeletteBot').getNewComments().then(comments => {
-    comments.forEach(c => {
-        let body = c.body.toLowerCase();
-        if(body.indexOf('omelette du fromage') >= 0) {
-            
-            reddit.getSubmission('t3_6w1jl7').expandReplies().then(replies => {
+let commented = [];
 
-                // replies.comments.forEach(r => {
-                //     Object.values(r).indexOf('Omelette_bot');
-                //     console.log('has Omelette_bot, r');
+runBot(reddit)
 
-                // })
-                console.log(_.pick(replies, 'id'));
-            })
-            //c.reply('**Do you mean "Omelette au fromage" ?** \n \n Although meant to depict "cheese omelette", "Omelette du fromage" is grammatically incorrect. You should say "omelette au fromage", which means "an omelette with cheese". \n \n [Read more](http://www.urbandictionary.com/define.php?term=Omelette%20du%20fromage)');
+
+function runBot(reddit) {
+
+    reddit.getSubreddit('OmeletteBot').getNewComments().then(async (comments) => {
+        if (comments.length > 0) {
+
+            comments.forEach(c => {
+
+                if (c.author.name != 'Omelette_bot' && commented.indexOf(c.id) < 0) {
+
+                    let body = c.body.toLowerCase();
+                    if (body.indexOf('omelette du fromage') >= 0) {
+                        commented.push(c.id);
+                        c.reply('http://i.imgur.com/tNJD6oY.gifv \n \n **Do you mean "Omelette au fromage" ?** \n \n Although meant to depict "cheese omelette", "Omelette du fromage" is grammatically incorrect. You should say "omelette au fromage", which means "an omelette with cheese". \n \n ');
+                        console.log('replied to ' + c.id)
+                    }
+                }
+            });
         }
 
+        await sleep(5000);
+        runBot(reddit);
     });
-})
+}
+
+function sleep(ms) {
+    console.log('sleeping')
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
